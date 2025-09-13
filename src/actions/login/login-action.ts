@@ -1,6 +1,5 @@
 "use server";
 
-import { createLoginSession, verifyPassword } from "@/lib/login/manage-login";
 import { LoginSchema } from "@/lib/login/schemas";
 import { apiRequest } from "@/utils/api-request";
 import { asyncDelay } from "@/utils/async-delay";
@@ -61,14 +60,5 @@ export async function loginAction(state: LoginActionState, formData: FormData) {
         };
     }
 
-    //From here, the username and passowrd are valid!!
-    console.log(loginResponse.data);
-
-    // await createLoginSession(email);
-    // redirect('/admin/post');
-
-    return {
-        email: formEmail,
-        errors: ["Success"],
-    };
+    redirect("/admin/post");
 }
