@@ -5,8 +5,10 @@ import {
     PublicUserDto,
     PublicUserSchema,
 } from "@/lib/user/schemas";
+import { apiRequest } from "@/utils/api-request";
 import { asyncDelay } from "@/utils/async-delay";
 import { getZodErrorMessages } from "@/utils/get-zod-error-messages";
+import { redirect } from "next/navigation";
 
 type CreateUserActionState = {
     user: PublicUserDto;
@@ -38,44 +40,20 @@ export async function createUserAction(
             success: false,
         };
     }
+    const createResponse = await apiRequest<PublicUserDto>("/user", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedFormData.data),
+    });
 
-    // FETCH API
-    const apiUrl = process.env.API_URL || "http://localhost:3001";
-
-    try {
-        const response = await fetch(`${apiUrl}/user`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(parsedFormData.data),
-        });
-
-        const json = await response.json();
-
-        if (!response.ok) {
-            console.log(json);
-
-            return {
-                user: PublicUserSchema.parse(formObj),
-                errors: json.message,
-                success: false,
-            };
-        }
-
-        console.log(json);
+    if (!createResponse.success) {
         return {
             user: PublicUserSchema.parse(formObj),
-            errors: ["Success"],
-            success: true,
-        };
-    } catch (e) {
-        console.log(e);
-
-        return {
-            user: PublicUserSchema.parse(formObj),
-            errors: ["Connection to sever failed"],
-            success: false,
+            errors: createResponse.errors,
+            success: createResponse.success,
         };
     }
+    redirect("/login?created=1");
 }
