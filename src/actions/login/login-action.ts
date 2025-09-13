@@ -1,12 +1,15 @@
 "use server";
 
 import { createLoginSession, verifyPassword } from "@/lib/login/manage-login";
+import { LoginSchema } from "@/lib/login/schemas";
+import { apiRequest } from "@/utils/api-request";
 import { asyncDelay } from "@/utils/async-delay";
+import { getZodErrorMessages } from "@/utils/get-zod-error-messages";
 import { redirect } from "next/navigation";
 
 type LoginActionState = {
-    username: string;
-    error: string;
+    email: string;
+    errors: string[];
 };
 
 export async function loginAction(state: LoginActionState, formData: FormData) {
@@ -14,44 +17,58 @@ export async function loginAction(state: LoginActionState, formData: FormData) {
 
     if (!allowLogin) {
         return {
-            username: "",
-            error: "Login not allowed",
+            email: "",
+            errors: ["Login not allowed"],
         };
     }
     await asyncDelay(3000);
 
     if (!(formData instanceof FormData)) {
         return {
-            username: "",
-            error: "Invalid credentials",
+            email: "",
+            errors: ["Invalid data"],
         };
     }
 
     //Data the user entered in the form
-    const username = formData.get("username")?.toString().trim() || "";
-    const password = formData.get("password")?.toString().trim() || "";
+    //TODO validates
+    const formObj = Object.fromEntries(formData.entries());
+    const formEmail = formObj?.email?.toString() || "";
+    const parsedFormData = LoginSchema.safeParse(formObj);
 
-    if (!username || !password) {
+    if (!parsedFormData.success) {
         return {
-            username,
-            error: "Enter username and password",
+            email: formEmail,
+            errors: getZodErrorMessages(parsedFormData.error.format()),
         };
     }
 
-    const isUsernameValid = username === process.env.LOGIN_USER;
-    const isPassowrdValid = await verifyPassword(
-        password,
-        process.env.LOGIN_PASS || ""
+    const loginResponse = await apiRequest<{ accessToken: string }>(
+        "/auth/login",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(parsedFormData.data),
+        }
     );
 
-    if (!isUsernameValid || !isPassowrdValid) {
+    if (!loginResponse.success) {
         return {
-            username,
-            error: "Invalid username or password",
+            email: formEmail,
+            errors: loginResponse.errors,
         };
     }
 
     //From here, the username and passowrd are valid!!
-    await createLoginSession(username);
-    redirect("/admin/post");
+    console.log(loginResponse.data);
+
+    // await createLoginSession(email);
+    // redirect('/admin/post');
+
+    return {
+        email: formEmail,
+        errors: ["Success"],
+    };
 }
