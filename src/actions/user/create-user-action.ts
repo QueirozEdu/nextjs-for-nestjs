@@ -18,7 +18,8 @@ export async function createUserAction(
     state: CreateUserActionState,
     formData: FormData
 ): Promise<CreateUserActionState> {
-    await asyncDelay(2000);
+    await asyncDelay(3000);
+
     if (!(formData instanceof FormData)) {
         return {
             user: state.user,
@@ -38,10 +39,43 @@ export async function createUserAction(
         };
     }
 
-    //TODO fetch API
-    return {
-        user: state.user,
-        errors: [],
-        success: true,
-    };
+    // FETCH API
+    const apiUrl = process.env.API_URL || "http://localhost:3001";
+
+    try {
+        const response = await fetch(`${apiUrl}/user`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(parsedFormData.data),
+        });
+
+        const json = await response.json();
+
+        if (!response.ok) {
+            console.log(json);
+
+            return {
+                user: PublicUserSchema.parse(formObj),
+                errors: json.message,
+                success: false,
+            };
+        }
+
+        console.log(json);
+        return {
+            user: PublicUserSchema.parse(formObj),
+            errors: ["Success"],
+            success: true,
+        };
+    } catch (e) {
+        console.log(e);
+
+        return {
+            user: PublicUserSchema.parse(formObj),
+            errors: ["Connection to sever failed"],
+            success: false,
+        };
+    }
 }

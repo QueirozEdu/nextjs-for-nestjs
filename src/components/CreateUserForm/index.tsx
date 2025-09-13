@@ -5,10 +5,10 @@ import clsx from "clsx";
 import { UserRoundIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../Button";
-import { createUserAction } from "@/actions/user/create-user-action";
 import { PublicUserSchema } from "@/lib/user/schemas";
 import { useActionState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { createUserAction } from "@/actions/user/create-user-action";
 
 export function CreateUserForm() {
     const [state, action, isPending] = useActionState(createUserAction, {
@@ -22,7 +22,7 @@ export function CreateUserForm() {
         if (state.errors.length > 0) {
             state.errors.forEach((error) => toast.error(error));
         }
-    });
+    }, [state]);
 
     return (
         <div
@@ -37,16 +37,16 @@ export function CreateUserForm() {
                     name="name"
                     labelText="Name"
                     placeholder="Your name"
-                    disabled={false}
+                    disabled={isPending}
                     defaultValue={state.user.name}
                     required
                 />
                 <InputText
                     type="email"
                     name="email"
-                    labelText="E-mail"
-                    placeholder="Your e-mail"
-                    disabled={false}
+                    labelText="Email"
+                    placeholder="Your email"
+                    disabled={isPending}
                     defaultValue={state.user.email}
                     required
                 />
@@ -55,7 +55,7 @@ export function CreateUserForm() {
                     name="password"
                     labelText="Password"
                     placeholder="Your password"
-                    disabled={false}
+                    disabled={isPending}
                     required
                 />
                 <InputText
@@ -63,18 +63,18 @@ export function CreateUserForm() {
                     name="password2"
                     labelText="Enter your password again"
                     placeholder="Enter your password again"
-                    disabled={false}
+                    disabled={isPending}
                     required
                 />
 
-                <Button disabled={false} type="submit" className="mt-4">
+                <Button disabled={isPending} type="submit" className="mt-4">
                     <UserRoundIcon />
-                    {!isPending && "Sign in"}
+                    {!isPending && "Create account"}
                     {isPending && "Creating account..."}
                 </Button>
 
                 <p className="text-sm/tight">
-                    <Link href="/login">Already registred? Log in</Link>
+                    <Link href="/login">Already resgistred? Log in</Link>
                 </p>
             </form>
         </div>
