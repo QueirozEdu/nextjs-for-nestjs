@@ -32,7 +32,7 @@ export function LoginForm() {
     useEffect(() => {
         if (userChanged === "1") {
             toast.dismiss();
-            toast.success("Seu usuário foi modificado. Faça login novamente.");
+            toast.success("Your user was modified. You need to log in again.");
             const url = new URL(window.location.href);
             url.searchParams.delete("userChanged");
             router.replace(url.toString());
@@ -40,7 +40,7 @@ export function LoginForm() {
 
         if (created === "1") {
             toast.dismiss();
-            toast.success("Seu usuário criado.");
+            toast.success("User created");
             const url = new URL(window.location.href);
             url.searchParams.delete("created");
             router.replace(url.toString());
