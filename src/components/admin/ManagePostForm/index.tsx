@@ -3,18 +3,21 @@
 import { Button } from "@/components/Button";
 import { InputCheckBox } from "@/components/InputCheckbox";
 import { InputText } from "@/components/InputText";
-import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { useActionState, useEffect, useState } from "react";
 import { ImageUploader } from "../ImageUploader";
-import { makePartialPublicPost, PublicPost } from "@/DTO/post/dto";
 import { createPostAction } from "@/actions/post/create-post-action";
 import { toast } from "react-toastify";
 import { updatePostAction } from "@/actions/post/update-post-action";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+    PublicPostForApiDto,
+    PublicPostForApiSchema,
+} from "@/lib/post/schemas";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 
 type ManagePostFormUpdateProps = {
     mode: "update";
-    publicPost?: PublicPost;
+    publicPost: PublicPostForApiDto;
 };
 
 type ManagePostFormCreateProps = {
@@ -41,7 +44,7 @@ export function ManagePostForm(props: ManagePostFormProps) {
     };
 
     const initialState = {
-        formState: makePartialPublicPost(publicPost),
+        formState: PublicPostForApiSchema.parse(publicPost || {}),
         errors: [],
     };
     const [state, action, isPending] = useActionState(
@@ -97,14 +100,6 @@ export function ManagePostForm(props: ManagePostFormProps) {
                     readOnly
                 />
                 <InputText
-                    labelText="Author"
-                    name="author"
-                    placeholder="Enter the author's name"
-                    type="text"
-                    defaultValue={formState.author}
-                    disabled={isPending}
-                />
-                <InputText
                     labelText="Title"
                     name="title"
                     placeholder="Your post title"
@@ -139,13 +134,15 @@ export function ManagePostForm(props: ManagePostFormProps) {
                     disabled={isPending}
                 />
 
-                <InputCheckBox
-                    labelText="Publish?"
-                    name="published"
-                    type="checkbox"
-                    defaultChecked={formState.published}
-                    disabled={isPending}
-                />
+                {mode === "update" && (
+                    <InputCheckBox
+                        labelText="Publish?"
+                        name="published"
+                        type="checkbox"
+                        defaultChecked={formState.published}
+                        disabled={isPending}
+                    />
+                )}
 
                 <div className="mt-4">
                     <Button type="submit">Send</Button>

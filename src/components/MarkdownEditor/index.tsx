@@ -36,7 +36,6 @@ export function MarkdownEditor({
 
             <MDEditor
                 className="whitespace-pre-wrap"
-                data-color-mode="light"
                 value={value}
                 onChange={(value) => {
                     if (value === undefined) return;
@@ -51,6 +50,7 @@ export function MarkdownEditor({
                     name: textAreaName,
                     disabled: disabled,
                 }}
+                data-color-mode="light"
                 previewOptions={{
                     rehypePlugins: [[rehypeSanitize]],
                     remarkPlugins: [[remarkGfm]],

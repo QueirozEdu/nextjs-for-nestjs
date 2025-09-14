@@ -1,17 +1,16 @@
 "use server";
-import { drizzleDb } from "@/db/drizzle";
-import { postsTable } from "@/db/drizzle/schemas";
-import { verifyLoginSession } from "@/lib/login/manage-login";
-import { postRepository } from "@/repositories/post";
-import { eq } from "drizzle-orm";
+
+import { getLoginSessionForApi } from "@/lib/login/manage-login";
+import { PublicPostForApiDto } from "@/lib/post/schemas";
+import { authenticatedApiRequest } from "@/utils/authenticated-api-request";
 import { revalidateTag } from "next/cache";
 
 export async function deletePostAction(id: string) {
-    const isAuthenticated = await verifyLoginSession();
+    const isAuthenticated = await getLoginSessionForApi();
 
     if (!isAuthenticated) {
         return {
-            errors: ["Please log in again in another tab to continue"],
+            error: "Log in again in another tab",
         };
     }
 
@@ -21,19 +20,37 @@ export async function deletePostAction(id: string) {
         };
     }
 
-    const post = await postRepository.findById(id).catch(() => undefined);
+    const postResponse = await authenticatedApiRequest<PublicPostForApiDto>(
+        `/post/me/${id}`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
 
-    if (!post) {
+    if (!postResponse.success) {
         return {
-            error: "Post does not exist",
+            error: "Error trying to find post",
         };
     }
 
-    //TODO: move this method to repository
-    await drizzleDb.delete(postsTable).where(eq(postsTable.id, id));
+    const deletePostResponse =
+        await authenticatedApiRequest<PublicPostForApiDto>(`/post/me/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+    if (!deletePostResponse.success) {
+        return {
+            error: "Error deleting post",
+        };
+    }
 
     revalidateTag("posts");
-    revalidateTag(`post-${post.slug}`);
+    revalidateTag(`post-${postResponse.data.slug}`);
 
     return {
         error: "",
