@@ -2,8 +2,8 @@
 
 import { LoginSchema } from "@/lib/login/schemas";
 import { apiRequest } from "@/utils/api-request";
-import { asyncDelay } from "@/utils/async-delay";
 import { getZodErrorMessages } from "@/utils/get-zod-error-messages";
+import { verifyHoneypotInput } from "@/utils/verify-honeypot-input";
 import { redirect } from "next/navigation";
 
 type LoginActionState = {
@@ -20,7 +20,14 @@ export async function loginAction(state: LoginActionState, formData: FormData) {
             errors: ["Login not allowed"],
         };
     }
-    await asyncDelay(3000);
+    const isBot = await verifyHoneypotInput(formData, 5000);
+
+    if (isBot) {
+        return {
+            email: "",
+            errors: ["nice"],
+        };
+    }
 
     if (!(formData instanceof FormData)) {
         return {
